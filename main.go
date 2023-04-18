@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/mattn/go-sqlite3"
 	"github.com/mdp/qrterminal"
 	"go.mau.fi/whatsmeow"
@@ -24,15 +25,23 @@ func TestEventHandler(evt interface{}) {
 }
 
 func main() {
+	dbLog := waLog.Stdout("Database", "INFO", true)
+	clientLog := waLog.Stdout("Client", "INFO", true)
+	_ = sqlite3.SQLITE_REAL // dummy to import sqlite3
+
 	// Load variables
+	err := godotenv.Load("conf.env")
+
+	if err != nil {
+		clientLog.Warnf(
+			"Missing conf.env trying to lookup into current environment for variables..",
+		)
+	}
+
 	dbPath := os.Getenv("DB_PATH")
 	adminId := os.Getenv("ADMIN")
 	groupId := os.Getenv("GROUP")
 	apiKey := os.Getenv("API_KEY")
-
-	dbLog := waLog.Stdout("Database", "INFO", true)
-	clientLog := waLog.Stdout("Client", "INFO", true)
-	_ = sqlite3.SQLITE_REAL // dummy to import sqlite3
 
 	container, err := sqlstore.New("sqlite3", dbPath, dbLog)
 	if err != nil {

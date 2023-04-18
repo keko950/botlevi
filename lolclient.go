@@ -22,7 +22,14 @@ func NewLolClient(apiKey string) *LolClient {
 }
 
 func (c *LolClient) GetLeagueBySummonerId(summonerId string) ([]League, error) {
-	req, err := http.NewRequest(http.MethodGet, strings.Join([]string{lolRequestUrl, "/lol/league/v4/entries/by-summoner/", summonerId}, ""), nil)
+	req, err := http.NewRequest(
+		http.MethodGet,
+		strings.Join(
+			[]string{lolRequestUrl, "/lol/league/v4/entries/by-summoner/", summonerId},
+			"",
+		),
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -52,7 +59,14 @@ func (c *LolClient) GetLeagueBySummonerId(summonerId string) ([]League, error) {
 }
 
 func (c *LolClient) GetSummonerByName(summonerName string) (Summoner, error) {
-	req, err := http.NewRequest(http.MethodGet, strings.Join([]string{lolRequestUrl, "/lol/summoner/v4/summoners/by-name/", summonerName}, ""), nil)
+	req, err := http.NewRequest(
+		http.MethodGet,
+		strings.Join(
+			[]string{lolRequestUrl, "/lol/summoner/v4/summoners/by-name/", summonerName},
+			"",
+		),
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -82,7 +96,19 @@ func (c *LolClient) GetSummonerByName(summonerName string) (Summoner, error) {
 }
 
 func (c *LolClient) GetLastMatchId(puuid string) (string, error) {
-	req, err := http.NewRequest(http.MethodGet, strings.Join([]string{matchRequestUrl, "/lol/match/v5/matches/by-puuid/", puuid, "/ids?start=0&count=1"}, ""), nil)
+	req, err := http.NewRequest(
+		http.MethodGet,
+		strings.Join(
+			[]string{
+				matchRequestUrl,
+				"/lol/match/v5/matches/by-puuid/",
+				puuid,
+				"/ids?start=0&count=1",
+			},
+			"",
+		),
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -104,7 +130,11 @@ func (c *LolClient) GetLastMatchId(puuid string) (string, error) {
 }
 
 func (c *LolClient) GetMatchById(id string) (Match, error) {
-	req, err := http.NewRequest(http.MethodGet, strings.Join([]string{matchRequestUrl, "/lol/match/v5/matches/", id}, ""), nil)
+	req, err := http.NewRequest(
+		http.MethodGet,
+		strings.Join([]string{matchRequestUrl, "/lol/match/v5/matches/", id}, ""),
+		nil,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -145,7 +175,7 @@ func (c *LolClient) GetMatchById(id string) (Match, error) {
 //////////////////
 //////////////////
 
-//////////////////
+// ////////////////
 type Summoner struct {
 	ID            string `json:"id"`
 	AccountID     string `json:"accountId"`
