@@ -40,21 +40,21 @@ var winPhrases = []string{
 	"ha despertado a pos!",
 }
 
-type ClientHandler struct {
-	client      *whatsmeow.Client
-	lolclient   *LolClient
+type LeviClient struct {
+	wppClient   *whatsmeow.Client
+	lolClient   *LolClient
 	db          *gorm.DB
 	playerCache map[string]map[string]string
 	groupJID    types.JID
 	adminJID    types.JID
 }
 
-func NewClientHandler(
+func NewLeviClient(
 	client *whatsmeow.Client,
 	lolClient *LolClient,
 	groupJID string,
 	adminJID string,
-) *ClientHandler {
+) *LeviClient {
 	var accs []Account
 	cache := map[string]map[string]string{}
 
@@ -75,17 +75,17 @@ func NewClientHandler(
 	chat, _ := types.ParseJID(groupJID)
 	admin, _ := types.ParseJID(adminJID)
 
-	return &ClientHandler{client, lolClient, db, cache, chat, admin}
+	return &LeviClient{client, lolClient, db, cache, chat, admin}
 }
 
-func (c *ClientHandler) checkForNewMatches() {
+func (c *LeviClient) CheckForNewMatches() {
 	rand.Seed(time.Now().UnixNano())
 	for range time.Tick(time.Second * 30) {
 		for puuid, value := range c.playerCache {
-			matchId, _ := c.lolclient.GetLastMatchId(puuid)
+			matchId, _ := c.lolClient.GetLastMatchId(puuid)
 			if matchId != value["lastMatchId"] {
 				value["lastMatchId"] = matchId
-				match, err := c.lolclient.GetMatchById(matchId)
+				match, err := c.lolClient.GetMatchById(matchId)
 
 				if err != nil {
 					continue
@@ -94,7 +94,7 @@ func (c *ClientHandler) checkForNewMatches() {
 				for _, v := range match.Info.Participants {
 					if v.Puuid == puuid {
 						if v.Win {
-							c.client.Log.Infof("DR EARLY HA GANADO")
+							c.wppClient.Log.Infof("DR EARLY HA GANADO")
 							c.SendMessage(
 								fmt.Sprintf(
 									"Bot: Ring Ring, VICTORIA! %s %s \n CAMPEON: %s \n DURACION: %d minutos \n STATS: %d/%d/%d \n DAÑO REALIZADO: %d \n HA PINGEADO UN TOTAL DE: %d \n ",
@@ -110,7 +110,7 @@ func (c *ClientHandler) checkForNewMatches() {
 								),
 							)
 						} else {
-							c.client.Log.Infof("DR EARLY HA PERDIDO")
+							c.wppClient.Log.Infof("DR EARLY HA PERDIDO")
 							c.SendMessage(
 								fmt.Sprintf("Bot: Ring Ring, DERROTA! %s %s \n CAMPEON: %s \n DURACION: %d minutos \n STATS: %d/%d/%d \n DAÑO REALIZADO: %d\n HA PINGEADO UN TOTAL DE: %d \n ",
 									v.SummonerName,
@@ -134,22 +134,21 @@ func (c *ClientHandler) checkForNewMatches() {
 	}
 }
 
-func (c *ClientHandler) AddEventHandlers() {
-	c.client.AddEventHandler(c.AddAccount)
-	go c.checkForNewMatches()
+func (c *LeviClient) AddEventHandlers() {
+	return
 
 }
 
-func (c *ClientHandler) SendMessage(msg string) {
-	c.client.SendMessage(
+func (c *LeviClient) SendMessage(msg string) {
+	c.wppClient.SendMessage(
 		context.Background(),
 		c.groupJID,
 		&waProto.Message{Conversation: proto.String(msg)},
 	)
 }
 
-func (c *ClientHandler) retrievePlayerInfo(summonerName string) (Account, error) {
-	summoner, err := c.lolclient.GetSummonerByName(summonerName)
+func (c *LeviClient) retrievePlayerInfo(summonerName string) (Account, error) {
+	summoner, err := c.lolClient.GetSummonerByName(summonerName)
 
 	if err != nil {
 		return Account{}, nil
@@ -163,7 +162,7 @@ func (c *ClientHandler) retrievePlayerInfo(summonerName string) (Account, error)
 	}, nil
 }
 
-func (c *ClientHandler) AddAccount(evt interface{}) {
+func (c *LeviClient) CommandHandler(evt interface{}) {
 	switch v := evt.(type) {
 	case *events.Message:
 		msg := strings.ToLower(v.Message.GetConversation())
@@ -184,13 +183,13 @@ func (c *ClientHandler) AddAccount(evt interface{}) {
 				acc, err := c.retrievePlayerInfo(strings.Join(params[1:], ""))
 
 				if err != nil {
-					c.client.Log.Errorf("%s", err)
+					c.wppClient.Log.Errorf("%s", err)
 					return
 				}
 
 				c.db.Create(&acc)
-				c.client.Log.Infof("Added account: %+v\n", acc)
-				matchId, _ := c.lolclient.GetLastMatchId(acc.Puuid)
+				c.wppClient.Log.Infof("Added account: %+v\n", acc)
+				matchId, _ := c.lolClient.GetLastMatchId(acc.Puuid)
 				c.playerCache[acc.Puuid] = map[string]string{"lastMatchId": matchId}
 				var accs []string
 				for k := range c.playerCache {
